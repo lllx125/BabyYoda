@@ -15,15 +15,9 @@
 *******************************************************************************/
 
 #include <DynamixelShield.h>
-#if defined(ARDUINO_AVR_UNO) || defined(ARDUINO_AVR_MEGA2560)
-  #include <SoftwareSerial.h>
-  SoftwareSerial soft_serial(7, 8); // DYNAMIXELShield UART RX/TX
-  #define DEBUG_SERIAL soft_serial
-#elif defined(ARDUINO_SAM_DUE) || defined(ARDUINO_SAM_ZERO)
-  #define DEBUG_SERIAL SerialUSB    
-#else
-  #define DEBUG_SERIAL Serial
-#endif
+#include <SoftwareSerial.h>
+//Create software serial object to communicate with HC-05 (Bluetooth)
+SoftwareSerial mySerial(3, 2); //HC-05 Tx & Rx is connected to Arduino #3 & #2
 
 //ID for the six motor in total. Left/Right mean looking from the front, face to face with baby Yoda.
 const uint8_t HEAD_ID = 101;
@@ -60,8 +54,6 @@ const float DXL_PROTOCOL_VERSION = 2.0;
 
 DynamixelShield dxl;
 
-//This namespace is required to use Control table item names
-using namespace ControlTableItem;
 
 //initialize very motor, turing them to initial degree
 void initID(uint8_t ID, float initDegree = 0.0){
@@ -147,8 +139,11 @@ void rotateTo(uint8_t ID, float deg, float speed = 15.0){
 }
 
 void setup() {
-  // For Uno, Nano, Mini, and Mega, use UART port of DYNAMIXEL Shield to debug.
-  DEBUG_SERIAL.begin(115200);
+  //Begin serial communication with Arduino and Arduino IDE (Serial Monitor)
+  Serial.begin(9600);
+  //Begin serial communication with Arduino and HC-05
+  mySerial.begin(9600);
+
   // Set Port baudrate to 57600bps. This has to match with DYNAMIXEL baudrate.
   dxl.begin(57600);
   // Set Port Protocol Version. This has to match with DYNAMIXEL protocol version.
@@ -202,5 +197,13 @@ void testMotion(){
   delay(500);
 }
 void loop() {
-  testMotion();
+  if(mySerial.available()) 
+  {
+    char data = mySerial.read();
+    Serial.write(data);
+    if(data=='t'){
+      testMotion();
+    }
+  }
+  delay(20);
 }

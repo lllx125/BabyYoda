@@ -35,10 +35,10 @@ const uint8_t RIGHT_ARM_ID = 106;
 // The degrees already accounts for gear ratios. Suppose you want the right arm (Gear ratio 1:2) to rotate 90 degrees, you don't write need to write 180 degree. Just say 90 degree.
 // Degree[0], head degree, -45~20 degree, with degree 0 points the head directly upward. The negative degree is nodding forward. The positive degree is raising the head backward.
 // Degree[1], neck degree,-60~60 degree, with degree 0 points the head directly to the front. The negative degree looking to the right. The positive degree is looking to the left.
-// Degree[2], left arm degree, -90~10 degree, with degree 0 points the left arm directly downward making a right angle between the shoulder and the arm. The negative degree bends the left arm inward. The positive degree bends the left arm outward.
+// Degree[2], left arm degree, -90~10 degree, with degree 0 points the left arm directly downward making a right angle between the shoulder and the arm. The negative degree bends the left arm outward. The positive degree bends the left arm inward.
 // Degree[3], left shoulder degree, 0~120 degree, with degree 0 points the left arm directly downward. The negative degree bends the left arm backward. The positive degree bends the left arm forward.
 // Degree[4], right shoulder degree, -120~0 degree, with degree 0 points the right arm directly downward. The negative degree bends the right arm forward. The positive degree bends the right arm backward.
-// Degree[5], right arm degree, -90~10 degree, with degree 0 points the right arm directly downward making a right angle between the shoulder and the arm. The negative degree bends the right arm inward. The positive degree bends the right arm outward.
+// Degree[5], right arm degree, -90~10 degree, with degree 0 points the right arm directly downward making a right angle between the shoulder and the arm. The negative degree bends the right arm outward. The positive degree bends the right arm inward.
 float Degree[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
 // GearRatio for each motor
@@ -50,8 +50,14 @@ float Degree[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 // GearRatio[5], GearRatio for right arm
 float GearRatio[6] = {2.0, 1.0, 2.0, 1.0, 1.0, 2.0};
 
-//record the starting time for each motor
+//record the starting time for each motor, unit in ms
 unsigned long StartTime[6] = {0,0,0,0,0,0};
+
+//the motor should stop after this amount of time, unit in ms, 0 means no limit on stoping.
+unsigned long StopTime[6] = {0,0,0,0,0,0};
+
+//record the rotational speed of each motor unit in rpm
+float MotorSpeed[6]={0,0,0,0,0,0};
 
 const float DXL_PROTOCOL_VERSION = 2.0;
 
@@ -126,6 +132,44 @@ bool assertDegree(uint8_t ID, float deg)
   return false;
 }
 
+// start the "ID" motor with 'speed' and stop it after 'stopTime' miliseconds
+void start(uint8_t ID, float speed = 15.0, int stopTime = 0)
+{
+  dxl.setGoalVelocity(ID, speed * GearRatio[ID - 101], UNIT_RPM);
+  StartTime[ID-101] = millis();
+  MotorSpeed[ID-101] = speed;
+  if(stopTime){
+    StopTime[ID-101] = stopTime;
+  }
+}
+
+// stop the "ID" motor 
+void stop(uint8_t ID){
+  dxl.setGoalVelocity(ID, 0, UNIT_RPM);
+  Degree[ID-101] += float(millis()-StartTime[ID-101])/1000.0/60.0*MotorSpeed[ID-101]*360.0;
+  MotorSpeed[ID-101] = 0;
+  StopTime[ID-101] = 0;
+}
+
+// check if the motors should be stopped
+void checkStopTime(){
+  for(int ID = 101; ID <= 106;ID++){
+    if(StopTime[ID-101]&&millis()-StartTime[ID-101]>=StopTime[ID-101]){
+      stop(ID);
+    }
+  }
+}
+
+//Assert 
+void AssertMotor(){
+  for(int ID = 101; ID <= 106;ID++){
+    float deg = float(millis()-StartTime[ID-101])/1000.0/60.0*MotorSpeed[ID-101]*360.0+Degree[ID-101];
+    if(!assertDegree(ID, deg)){
+      stop(ID);
+    }
+  }
+}
+
 // rotate rotates the motor with ID: 'ID' to the degree 'degree', with 'speed' rpm
 void rotateTo(uint8_t ID, float deg, float speed = 15.0)
 {
@@ -161,25 +205,21 @@ void rotateTo(uint8_t ID, float deg, float speed = 15.0)
 
 void testMotion()
 {
-  rotateTo(HEAD_ID, -40.0, 10.0);
+  rotateTo(HEAD_ID, -45.0, 10.0);
   delay(500);
   rotateTo(HEAD_ID, 20.0);
   delay(500);
   rotateTo(HEAD_ID, 0.0, 5.0);
   delay(500);
-  rotateTo(NECK_ID, -40.0, 20.0);
+  rotateTo(NECK_ID, -60, 20.0);
   delay(500); 
-  rotateTo(NECK_ID, 20.0);
+  rotateTo(NECK_ID, 60);
   delay(500);
   rotateTo(NECK_ID, 0.0);
   delay(500);
   rotateTo(RIGHT_SHOULDER_ID, -120.0, 70.0);
   delay(500);
-  rotateTo(RIGHT_SHOULDER_ID, 120.0, 70.0);
-  delay(500);
   rotateTo(RIGHT_SHOULDER_ID, 0.0, 70.0);
-  delay(500);
-  rotateTo(LEFT_SHOULDER_ID, -120.0);
   delay(500);
   rotateTo(LEFT_SHOULDER_ID, 120.0);
   delay(500);
@@ -199,28 +239,95 @@ void testMotion()
   delay(500);
 }
 
-float actionTime = 100;// stop the motor if it moved for this amount of time, unit in ms
-
-// start the motor with ID
-void start(uint8_t ID, float speed = 15.0)
-{
-  float newDeg = (speed*actionTime/1000/60)*360+Degree[ID - 101];
-  if (!assertDegree(ID, newDeg))
+void control(){
+  if (mySerial.available())
   {
-    return;
-  }
-  Degree[ID - 101] = newDeg;
-  dxl.setGoalVelocity(ID, speed * GearRatio[ID - 101], UNIT_RPM);
-  StartTime[ID - 101] = millis();
-}
-
-// Stop the motor
-void stop()
-{
-  for (int i = 0; i< 6;i++){
-    if(StartTime[i]!=0 && millis() - StartTime[i] >= actionTime){
-      StartTime[i] = 0;
-      dxl.setGoalVelocity(i+101, 0, UNIT_RPM);
+    char data = mySerial.read();
+    Serial.write(data);
+    switch (data){
+      case 'T': //test motion
+        testMotion();
+        break;
+      case 'I': //initialize position
+        initID(HEAD_ID, 110.0);
+        initID(NECK_ID, 0.0);
+        initID(LEFT_ARM_ID, 70.0);
+        initID(LEFT_SHOULDER_ID, 290.0);
+        initID(RIGHT_SHOULDER_ID, 180.0);
+        initID(RIGHT_ARM_ID, 240.0);
+        break;
+      case 'F': //move head forward
+        start(101, 15.0);
+        break;
+      case 'f': //stop moving head forward
+        stop(101);
+        break;
+      case 'B': //move head backward
+        start(101, -15.0);
+        break;
+      case 'b': //stop moving head backward
+        stop(101);
+        break;
+      case 'L': //move head leftward
+        start(102, -15.0);
+        break;
+      case 'l': //stop moving head leftward
+        stop(102);
+        break;
+      case 'R': //move head rightward
+        start(102, 15.0);
+        break;
+      case 'r': //stop moving head rightward
+        stop(102);
+        break;
+      case 'A': //move left arm outward
+        start(103, -15.0);
+        break;
+      case 'a': //stop moving left arm outward
+        stop(103);
+        break;
+      case 'S': //move left arm inward
+        start(103, 15.0);
+        break;
+      case 's': //stop moving left arm inward
+        stop(103);
+        break;
+      case 'Q': //move left arm forward
+        start(104, 15.0);
+        break;
+      case 'q': //stop moving left arm forward
+        stop(104);
+        break;
+      case 'Z': //move left arm backward
+        start(104, -15.0);
+        break;
+      case 'z': //stop moving left arm backward
+        stop(104);
+        break;
+      case 'P': //move right arm forward
+        start(105, -15.0);
+        break;
+      case 'p': //stop moving right arm forward
+        stop(105);
+        break;
+      case 'M': //move right arm backward
+        start(105, 15.0);
+        break;
+      case 'm': //stop moving right arm backward
+        stop(105);
+        break;
+      case 'K': //move right arm outward
+        start(106, -15.0);
+        break;
+      case 'k': //stop moving right arm outward
+        stop(106);
+        break;
+      case 'J': //move right arm inward
+        start(106, 15.0);
+        break;
+      case 'j': //stop moving right arm inward
+        stop(106);
+        break;
     }
   }
 }
@@ -248,24 +355,7 @@ void setup()
 }
 void loop()
 {
-  if (mySerial.available())
-  {
-    char data = mySerial.read();
-    Serial.write(data);
-    switch (data){
-      case 'F': //move head forward
-        start(101, -15.0);
-        break;
-      case 'B': //move head backward
-        start(101, 15.0);
-        break;
-      case 'L': //move head leftward
-        start(102, 15.0);
-        break;
-      case 'R': //move head rightward
-        start(102, -15.0);
-        break;
-    }
-  }
-  stop();
+  control();
+  checkStopTime();
+  //AssertMotor();
 }

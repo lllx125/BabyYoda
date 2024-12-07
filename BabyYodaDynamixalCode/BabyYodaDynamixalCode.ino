@@ -73,7 +73,6 @@ void initID(uint8_t ID, float initDegree = 0.0)
   dxl.torqueOff(ID);
   dxl.setOperatingMode(ID, OP_VELOCITY);
   dxl.torqueOn(ID);
-
   // make sure the motor is able to rotate from the closest side
   float initSpeed = 40; // how fast the motor turn to inital position, unit in rpm
   float currentDegree = dxl.getPresentPosition(ID, UNIT_DEGREE);
@@ -99,6 +98,15 @@ void initID(uint8_t ID, float initDegree = 0.0)
   dxl.setGoalVelocity(ID, 0, UNIT_RPM);
 
   Degree[ID - 101] = 0.0;
+}
+void initPosition(){
+  // The initial position. If any mechanical structures has been changed than the inital values has to be modified
+  initID(HEAD_ID, 110.0);
+  initID(NECK_ID, 0.0);
+  initID(LEFT_ARM_ID, 300.0);
+  initID(LEFT_SHOULDER_ID, 290.0);
+  initID(RIGHT_SHOULDER_ID, 180.0);
+  initID(RIGHT_ARM_ID, 180);
 }
 
 // assert whether the degree is within the allowed range.
@@ -249,21 +257,16 @@ void control(){
         testMotion();
         break;
       case 'I': //initialize position
-        initID(HEAD_ID, 110.0);
-        initID(NECK_ID, 0.0);
-        initID(LEFT_ARM_ID, 70.0);
-        initID(LEFT_SHOULDER_ID, 290.0);
-        initID(RIGHT_SHOULDER_ID, 180.0);
-        initID(RIGHT_ARM_ID, 240.0);
+        initPosition();
         break;
       case 'F': //move head forward
-        start(101, 15.0);
+        start(101, 5.0);
         break;
       case 'f': //stop moving head forward
         stop(101);
         break;
       case 'B': //move head backward
-        start(101, -15.0);
+        start(101, -5.0);
         break;
       case 'b': //stop moving head backward
         stop(101);
@@ -344,18 +347,11 @@ void setup()
   // Set Port Protocol Version. This has to match with DYNAMIXEL protocol version.
   dxl.setPortProtocolVersion(DXL_PROTOCOL_VERSION);
 
-  // The initial position. If any mechanical structures has been changed than the inital values has to be modified
-  initID(HEAD_ID, 110.0);
-  initID(NECK_ID, 0.0);
-  initID(LEFT_ARM_ID, 70.0);
-  initID(LEFT_SHOULDER_ID, 290.0);
-  initID(RIGHT_SHOULDER_ID, 180.0);
-  initID(RIGHT_ARM_ID, 240.0);
-  delay(500);
+  initPosition();
 }
 void loop()
 {
   control();
-  checkStopTime();
-  //AssertMotor();
+  //checkStopTime();
+  AssertMotor();
 }

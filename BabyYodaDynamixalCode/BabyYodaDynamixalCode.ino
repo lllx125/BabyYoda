@@ -93,6 +93,7 @@ void initID(uint8_t ID, float initDegree = 0.0)
   }
   else
   {
+
     dxl.setGoalVelocity(ID, initSpeed, UNIT_RPM);
   }
   delay(((fabs(degreeDifference) / 360.0) * 60.0) / initSpeed * 1000.0);
@@ -257,13 +258,13 @@ void control(){
         initID(RIGHT_ARM_ID, 240.0);
         break;
       case 'F': //move head forward
-        start(101, 15.0);
+        start(101, -15.0);
         break;
       case 'f': //stop moving head forward
         stop(101);
         break;
       case 'B': //move head backward
-        start(101, -15.0);
+        start(101, 15.0);
         break;
       case 'b': //stop moving head backward
         stop(101);

@@ -41,6 +41,8 @@ const uint8_t RIGHT_ARM_ID = 106;
 // Degree[5], right arm degree, -90~10 degree, with degree 0 points the right arm directly downward making a right angle between the shoulder and the arm. The negative degree bends the right arm outward. The positive degree bends the right arm inward.
 float Degree[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
+float DegreeLimit[6][2] = {{-90.0,20.0},{-70.0,70.0},{-100.0,5.0},{0.0,120.0},{-120.0,0.0},{-100.0, 5.0}};
+
 // GearRatio for each motor
 // GearRatio[0], GearRatio for head
 // GearRatio[1], GearRatio for neck
@@ -108,50 +110,27 @@ void initPosition()
   initID(LEFT_ARM_ID, 300.0);
   initID(LEFT_SHOULDER_ID, 290.0);
   initID(RIGHT_SHOULDER_ID, 180.0);
-  initID(RIGHT_ARM_ID, 180);
+  initID(RIGHT_ARM_ID, 80);
 }
 
 // assert whether the degree is within the allowed range.
 bool assertDegree(uint8_t ID, float deg)
 {
-  if (ID == HEAD_ID)
-  {
-    return -45 <= deg && 20 >= deg;
-  }
-  if (ID == NECK_ID)
-  {
-    return -60 <= deg && 60 >= deg;
-  }
-  if (ID == LEFT_ARM_ID)
-  {
-    return -90 <= deg && 10 >= deg;
-  }
-  if (ID == LEFT_SHOULDER_ID)
-  {
-    return 0 <= deg && 120 >= deg;
-  }
-  if (ID == RIGHT_SHOULDER_ID)
-  {
-    return -120 <= deg && 0 >= deg;
-  }
-  if (ID == RIGHT_ARM_ID)
-  {
-    return -90 <= deg && 10 >= deg;
-  }
-  // If the ID is not known
-  return false;
+  return DegreeLimit[ID-101][0] <= deg && DegreeLimit[ID-101][1] >= deg;
 }
 
 // start the "ID" motor with 'speed' and stop it after 'stopTime' miliseconds
-void start(uint8_t ID, float speed = 15.0, int stopTime = 0)
+void start(uint8_t ID, float speed = 15.0, int sign = 1, int stopTime = 0)
 {
-  dxl.setGoalVelocity(ID, speed * GearRatio[ID - 101], UNIT_RPM);
+  if(sign*Degree[ID - 101]>sign*DegreeLimit[ID-101][(sign+1)/2]){
+    return;
+  }
+  speed *= (float)sign * GearRatio[ID - 101];
+  dxl.setGoalVelocity(ID, speed, UNIT_RPM);
   StartTime[ID - 101] = millis();
   MotorSpeed[ID - 101] = speed;
-  if (stopTime)
-  {
-    StopTime[ID - 101] = stopTime;
-  }
+  float limitTime = fabs(DegreeLimit[ID-101][(sign+1)/2]-Degree[ID - 101])/(fabs(speed) /60.0*360)*1000;
+  StopTime[ID - 101] = stopTime<limitTime? limitTime: stopTime;
 }
 
 // stop the "ID" motor
@@ -205,15 +184,16 @@ void rotateTo(uint8_t ID, float deg, float speed = 15.0)
   {
     speed = 40;
   }
+  speed *= GearRatio[ID - 101];
   float currentDegree = Degree[ID - 101];
   // rotate the motor
   if (deg < currentDegree)
   {
-    dxl.setGoalVelocity(ID, -speed * GearRatio[ID - 101], UNIT_RPM);
+    dxl.setGoalVelocity(ID, -speed , UNIT_RPM);
   }
   else
   {
-    dxl.setGoalVelocity(ID, speed * GearRatio[ID - 101], UNIT_RPM);
+    dxl.setGoalVelocity(ID, speed, UNIT_RPM);
   }
   // rotate for the calculated amount of time.
   delay(((fabs(deg - currentDegree) / 360.0) * 60.0) / speed * 1000.0);
@@ -223,9 +203,10 @@ void rotateTo(uint8_t ID, float deg, float speed = 15.0)
 
 void testMotion()
 {
-  rotateTo(HEAD_ID, -45.0, 10.0);
+  initPosition();
+  rotateTo(HEAD_ID, -45.0, 5.0);
   delay(500);
-  rotateTo(HEAD_ID, 20.0);
+  rotateTo(HEAD_ID, 20.0, 5.0);
   delay(500);
   rotateTo(HEAD_ID, 0.0, 5.0);
   delay(500);
@@ -261,7 +242,7 @@ void control()
 {
   if (mySerial.available())
   {
-    char data = mySerial.read();
+    char data = (char)mySerial.read();
     Serial.write(data);
     switch (data)
     {
@@ -272,76 +253,76 @@ void control()
       initPosition();
       break;
     case 'F': // move head forward
-      start(101, -5.0);
+      start(HEAD_ID, 5.0, -1);
       break;
     case 'f': // stop moving head forward
-      stop(101);
+      stop(HEAD_ID);
       break;
     case 'B': // move head backward
-      start(101, 5.0);
+      start(HEAD_ID, 5.0, 1);
       break;
     case 'b': // stop moving head backward
-      stop(101);
+      stop(HEAD_ID);
       break;
     case 'L': // move head leftward
-      start(102, -15.0);
+      start(NECK_ID, 15.0, 1);
       break;
     case 'l': // stop moving head leftward
-      stop(102);
+      stop(NECK_ID);
       break;
     case 'R': // move head rightward
-      start(102, 15.0);
+      start(NECK_ID, 15.0, -1);
       break;
     case 'r': // stop moving head rightward
-      stop(102);
+      stop(NECK_ID);
       break;
     case 'A': // move left arm outward
-      start(103, -15.0);
+      start(LEFT_ARM_ID, 15.0, -1);
       break;
     case 'a': // stop moving left arm outward
-      stop(103);
+      stop(LEFT_ARM_ID);
       break;
     case 'S': // move left arm inward
-      start(103, 15.0);
+      start(LEFT_ARM_ID, 15.0, 1);
       break;
     case 's': // stop moving left arm inward
-      stop(103);
+      stop(LEFT_ARM_ID);
       break;
     case 'Q': // move left arm forward
-      start(104, 15.0);
+      start(LEFT_SHOULDER_ID, 15.0, 1);
       break;
     case 'q': // stop moving left arm forward
-      stop(104);
+      stop(LEFT_SHOULDER_ID);
       break;
     case 'Z': // move left arm backward
-      start(104, -15.0);
+      start(LEFT_SHOULDER_ID, 15.0, -1);
       break;
     case 'z': // stop moving left arm backward
-      stop(104);
+      stop(LEFT_SHOULDER_ID);
       break;
     case 'P': // move right arm forward
-      start(105, -15.0);
+      start(RIGHT_SHOULDER_ID, 15.0, -1);
       break;
     case 'p': // stop moving right arm forward
-      stop(105);
+      stop(RIGHT_SHOULDER_ID);
       break;
     case 'M': // move right arm backward
-      start(105, 15.0);
+      start(RIGHT_SHOULDER_ID, 15.0, 1);
       break;
     case 'm': // stop moving right arm backward
-      stop(105);
+      stop(RIGHT_SHOULDER_ID);
       break;
     case 'K': // move right arm outward
-      start(106, -15.0);
+      start(RIGHT_ARM_ID, 15.0, -1);
       break;
     case 'k': // stop moving right arm outward
-      stop(106);
+      stop(RIGHT_ARM_ID);
       break;
     case 'J': // move right arm inward
-      start(106, 15.0);
+      start(RIGHT_ARM_ID, 15.0, 1);
       break;
     case 'j': // stop moving right arm inward
-      stop(106);
+      stop(RIGHT_ARM_ID);
       break;
     }
   }
@@ -364,6 +345,6 @@ void setup()
 void loop()
 {
   control();
-  // checkStopTime();
-  AssertMotor();
+  checkStopTime();
+  //AssertMotor();
 }

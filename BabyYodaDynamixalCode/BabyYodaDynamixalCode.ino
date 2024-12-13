@@ -18,6 +18,11 @@
 #include <SoftwareSerial.h>
 // Create software serial object to communicate with HC-05 (Bluetooth)
 SoftwareSerial mySerial(3, 2); // HC-05 Tx & Rx is connected to Arduino #3 & #2
+// HC-05 to Arduino connection:
+// TX -> 3
+// RX -> 2
+// VCC -> 5V
+// GND -> GND
 
 // ID for the six motor in total. Left/Right mean looking from the front, face to face with baby Yoda.
 const uint8_t HEAD_ID = 101;
@@ -41,7 +46,7 @@ const uint8_t RIGHT_ARM_ID = 106;
 // Degree[5], right arm degree, -90~10 degree, with degree 0 points the right arm directly downward making a right angle between the shoulder and the arm. The negative degree bends the right arm outward. The positive degree bends the right arm inward.
 float Degree[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
-float DegreeLimit[6][2] = {{-90.0,20.0},{-70.0,70.0},{-100.0,5.0},{0.0,120.0},{-120.0,0.0},{-100.0, 5.0}};
+float DegreeLimit[6][2] = {{-90.0, 20.0}, {-70.0, 70.0}, {-100.0, 5.0}, {0.0, 120.0}, {-120.0, 0.0}, {-100.0, 5.0}};
 
 // GearRatio for each motor
 // GearRatio[0], GearRatio for head
@@ -116,21 +121,22 @@ void initPosition()
 // assert whether the degree is within the allowed range.
 bool assertDegree(uint8_t ID, float deg)
 {
-  return DegreeLimit[ID-101][0] <= deg && DegreeLimit[ID-101][1] >= deg;
+  return DegreeLimit[ID - 101][0] <= deg && DegreeLimit[ID - 101][1] >= deg;
 }
 
 // start the "ID" motor with 'speed' and stop it after 'stopTime' miliseconds
 void start(uint8_t ID, float speed = 15.0, int sign = 1, int stopTime = 0)
 {
-  if(sign*Degree[ID - 101]>sign*DegreeLimit[ID-101][(sign+1)/2]){
+  if (sign * Degree[ID - 101] > sign * DegreeLimit[ID - 101][(sign + 1) / 2])
+  {
     return;
   }
   speed *= (float)sign * GearRatio[ID - 101];
   dxl.setGoalVelocity(ID, speed, UNIT_RPM);
   StartTime[ID - 101] = millis();
   MotorSpeed[ID - 101] = speed;
-  float limitTime = fabs(DegreeLimit[ID-101][(sign+1)/2]-Degree[ID - 101])/(fabs(speed) /60.0*360)*1000;
-  StopTime[ID - 101] = stopTime<limitTime? limitTime: stopTime;
+  float limitTime = fabs(DegreeLimit[ID - 101][(sign + 1) / 2] - Degree[ID - 101]) / (fabs(speed) / 60.0 * 360) * 1000;
+  StopTime[ID - 101] = stopTime < limitTime ? limitTime : stopTime;
 }
 
 // stop the "ID" motor
@@ -189,7 +195,7 @@ void rotateTo(uint8_t ID, float deg, float speed = 15.0)
   // rotate the motor
   if (deg < currentDegree)
   {
-    dxl.setGoalVelocity(ID, -speed , UNIT_RPM);
+    dxl.setGoalVelocity(ID, -speed, UNIT_RPM);
   }
   else
   {
@@ -346,5 +352,5 @@ void loop()
 {
   control();
   checkStopTime();
-  //AssertMotor();
+  // AssertMotor();
 }

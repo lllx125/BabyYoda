@@ -1,6 +1,6 @@
 # BabyYoda
 
-the Code for Baby Yoda using Dynamixel in Fall 2024 by Lixing Li. This Intruction aims to help you learn to control Baby Yoda, built your own Baby Yoda, understand and expand on the current version. GooD Luck!
+the Code for Baby Yoda using Dynamixel in Fall 2024 by Lixing Li. This Instruction aims to help you learn to control Baby Yoda, built your own Baby Yoda, understand and expand on the current version. Good Luck!
 
 ### Control Version: Xbox to Laptop to HC-05 to Arduino to Dynamixel - 12/07/2024
 

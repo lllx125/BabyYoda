@@ -250,6 +250,7 @@ void control()
   {
     char data = (char)mySerial.read();
     Serial.write(data);
+    //char data = (char)Serial.read();
     switch (data)
     {
     case 'T': // test motion

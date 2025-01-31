@@ -38,15 +38,15 @@ const uint8_t RIGHT_ARM_ID = 106;
 // Use RotateTo() to set goal positions.
 // The inital position is where all the degrees are 0.
 // The degrees already accounts for gear ratios. Suppose you want the right arm (Gear ratio 1:2) to rotate 90 degrees, you don't write need to write 180 degree. Just say 90 degree.
-// Degree[0], head degree, -45~20 degree, with degree 0 points the head directly upward. The negative degree is nodding forward. The positive degree is raising the head backward.
-// Degree[1], neck degree,-60~60 degree, with degree 0 points the head directly to the front. The negative degree looking to the right. The positive degree is looking to the left.
-// Degree[2], left arm degree, -90~10 degree, with degree 0 points the left arm directly downward making a right angle between the shoulder and the arm. The negative degree bends the left arm outward. The positive degree bends the left arm inward.
-// Degree[3], left shoulder degree, 0~120 degree, with degree 0 points the left arm directly downward. The negative degree bends the left arm backward. The positive degree bends the left arm forward.
-// Degree[4], right shoulder degree, -120~0 degree, with degree 0 points the right arm directly downward. The negative degree bends the right arm forward. The positive degree bends the right arm backward.
+// Degree[0], head degree, with degree 0 points the head directly upward. The negative degree is nodding forward. The positive degree is raising the head backward.
+// Degree[1], neck degree, with degree 0 points the head directly to the front. The negative degree looking to the right. The positive degree is looking to the left.
+// Degree[2], left arm degree, with degree 0 points the left arm directly downward making a right angle between the shoulder and the arm. The negative degree bends the left arm outward. The positive degree bends the left arm inward.
+// Degree[3], left shoulder degree, degree, with degree 0 points the left arm directly downward. The negative degree bends the left arm backward. The positive degree bends the left arm forward.
+// Degree[4], right shoulder degree, degree, with degree 0 points the right arm directly downward. The negative degree bends the right arm forward. The positive degree bends the right arm backward.
 // Degree[5], right arm degree, -90~10 degree, with degree 0 points the right arm directly downward making a right angle between the shoulder and the arm. The negative degree bends the right arm outward. The positive degree bends the right arm inward.
 float Degree[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
-float DegreeLimit[6][2] = {{-90.0, 20.0}, {-70.0, 70.0}, {-100.0, 5.0}, {0.0, 120.0}, {-120.0, 0.0}, {-100.0, 5.0}};
+float DegreeLimit[6][2] = {{-90.0, 40.0}, {-70.0, 70.0}, {-180.0, 5.0}, {0.0, 180.0}, {-180, 0.0}, {-180.0, 5.0}};
 
 // GearRatio for each motor
 // GearRatio[0], GearRatio for head
@@ -113,8 +113,8 @@ void initPosition()
   initID(HEAD_ID, 110.0);
   initID(NECK_ID, 0.0);
   initID(LEFT_ARM_ID, 300.0);
-  initID(LEFT_SHOULDER_ID, 290.0);
-  initID(RIGHT_SHOULDER_ID, 180.0);
+  initID(LEFT_SHOULDER_ID, 170.0);
+  initID(RIGHT_SHOULDER_ID, 300.0);
   initID(RIGHT_ARM_ID, 80);
 }
 

@@ -66,7 +66,7 @@ class XboxController(object):
         UD = -self.UDDPad  # Head Up Down
         X = self.X  # Test Motion
         Y = self.Y  # Initialize
-        B = self.B
+        B = self.B  # Wave
         A = self.A
         Lx = self.LeftJoystickX  # Left Arm x
         Ly = self.LeftJoystickY  # Left Arm y

@@ -19,7 +19,7 @@ def ProcessHead(y, x):
             code += 'F'
     if X != x:
         if x == 0:
-            
+
             code += 'l'
         elif x == 1:
             code += 'R'
@@ -39,6 +39,8 @@ def ProcessSpecialFunctions(x, y, b, a):
         code += "T"
     if Y == 0 and y == 1:  # Y on press, do Initialize
         code += "I"
+    if B == 0 and b == 1:  # B on press, do Wave
+        code += "W"
 
     return code
 

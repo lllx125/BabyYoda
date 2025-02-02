@@ -41,9 +41,9 @@ const uint8_t RIGHT_ARM_ID = 106;
 // Degree[0], head degree, with degree 0 points the head directly upward. The negative degree is nodding forward. The positive degree is raising the head backward.
 // Degree[1], neck degree, with degree 0 points the head directly to the front. The negative degree looking to the right. The positive degree is looking to the left.
 // Degree[2], left arm degree, with degree 0 points the left arm directly downward making a right angle between the shoulder and the arm. The negative degree bends the left arm outward. The positive degree bends the left arm inward.
-// Degree[3], left shoulder degree, degree, with degree 0 points the left arm directly downward. The negative degree bends the left arm backward. The positive degree bends the left arm forward.
-// Degree[4], right shoulder degree, degree, with degree 0 points the right arm directly downward. The negative degree bends the right arm forward. The positive degree bends the right arm backward.
-// Degree[5], right arm degree, -90~10 degree, with degree 0 points the right arm directly downward making a right angle between the shoulder and the arm. The negative degree bends the right arm outward. The positive degree bends the right arm inward.
+// Degree[3], left shoulder degree, with degree 0 points the left arm directly downward. The negative degree bends the left arm backward. The positive degree bends the left arm forward.
+// Degree[4], right shoulder degree,  with degree 0 points the right arm directly downward. The negative degree bends the right arm forward. The positive degree bends the right arm backward.
+// Degree[5], right arm degree, with degree 0 points the right arm directly downward making a right angle between the shoulder and the arm. The negative degree bends the right arm outward. The positive degree bends the right arm inward.
 float Degree[6] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
 
 float DegreeLimit[6][2] = {{-90.0, 40.0}, {-70.0, 70.0}, {-180.0, 5.0}, {0.0, 180.0}, {-180, 0.0}, {-180.0, 5.0}};
@@ -112,7 +112,7 @@ void initPosition()
   // The initial position. If any mechanical structures has been changed than the inital values has to be modified
   initID(HEAD_ID, 110.0);
   initID(NECK_ID, 0.0);
-  initID(LEFT_ARM_ID, 300.0);
+  initID(LEFT_ARM_ID, 320.0);
   initID(LEFT_SHOULDER_ID, 170.0);
   initID(RIGHT_SHOULDER_ID, 300.0);
   initID(RIGHT_ARM_ID, 80);
@@ -176,19 +176,16 @@ void AssertMotor()
 // rotate rotates the motor with ID: 'ID' to the degree 'degree', with 'speed' rpm
 void rotateTo(uint8_t ID, float deg, float speed = 15.0)
 {
-  if (!assertDegree(ID, deg))
-  {
-    return;
-  }
+
   //'speed' should be positive
   if (speed <= 0)
   {
     speed = -speed;
   }
   //'speed' should not be bigger than 50
-  if (speed > 40)
+  if (speed > 40.0)
   {
-    speed = 40;
+    speed = 40.0;
   }
   speed *= GearRatio[ID - 101];
   float currentDegree = Degree[ID - 101];
@@ -244,6 +241,22 @@ void testMotion()
   delay(500);
 }
 
+void wave(){
+  rotateTo(RIGHT_SHOULDER_ID, -170.0, 40.0);
+  delay(300);
+  rotateTo(RIGHT_ARM_ID, -90.0,30.0);
+  delay(500);
+  rotateTo(RIGHT_ARM_ID, 0.0,30.0);
+  delay(500);
+  rotateTo(RIGHT_ARM_ID, -90.0,30.0);
+  delay(500);
+  rotateTo(RIGHT_ARM_ID, 0.0,30.0);
+  delay(500);
+  rotateTo(RIGHT_ARM_ID, -90.0,30.0);
+  delay(500);
+  rotateTo(RIGHT_ARM_ID, 0.0,30.0);
+}
+
 void control()
 {
   if (mySerial.available())
@@ -255,6 +268,9 @@ void control()
     {
     case 'T': // test motion
       testMotion();
+      break;
+    case 'W': // wave motion
+      wave();
       break;
     case 'I': // initialize position
       initPosition();

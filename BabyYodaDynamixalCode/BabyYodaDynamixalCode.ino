@@ -262,7 +262,7 @@ void control()
   if (mySerial.available())
   {
     char data = (char)mySerial.read();
-    Serial.write(data);
+    Serial.println(data);
     //char data = (char)Serial.read();
     switch (data)
     {

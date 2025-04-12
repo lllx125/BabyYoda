@@ -16,13 +16,8 @@
 
 #include <DynamixelShield.h>
 #include <SoftwareSerial.h>
-// Create software serial object to communicate with HC-05 (Bluetooth)
-SoftwareSerial mySerial(3, 2); // HC-05 Tx & Rx is connected to Arduino #3 & #2
-// HC-05 to Arduino connection:
-// TX -> 3
-// RX -> 2
-// VCC -> 5V
-// GND -> GND
+// Create software serial object to communicate with ESP32
+SoftwareSerial mySerial(3, 2); // ESP Tx & Rx is connected to Arduino #3 & #2, see https://app.cirkitdesigner.com/project/733f7253-d2ce-4fde-950d-96555f7f8535
 
 // ID for the six motor in total. Left/Right mean looking from the front, face to face with baby Yoda.
 const uint8_t HEAD_ID = 101;
@@ -241,20 +236,21 @@ void testMotion()
   delay(500);
 }
 
-void wave(){
+void wave()
+{
   rotateTo(RIGHT_SHOULDER_ID, -170.0, 40.0);
   delay(300);
-  rotateTo(RIGHT_ARM_ID, -90.0,30.0);
+  rotateTo(RIGHT_ARM_ID, -90.0, 30.0);
   delay(500);
-  rotateTo(RIGHT_ARM_ID, 0.0,30.0);
+  rotateTo(RIGHT_ARM_ID, 0.0, 30.0);
   delay(500);
-  rotateTo(RIGHT_ARM_ID, -90.0,30.0);
+  rotateTo(RIGHT_ARM_ID, -90.0, 30.0);
   delay(500);
-  rotateTo(RIGHT_ARM_ID, 0.0,30.0);
+  rotateTo(RIGHT_ARM_ID, 0.0, 30.0);
   delay(500);
-  rotateTo(RIGHT_ARM_ID, -90.0,30.0);
+  rotateTo(RIGHT_ARM_ID, -90.0, 30.0);
   delay(500);
-  rotateTo(RIGHT_ARM_ID, 0.0,30.0);
+  rotateTo(RIGHT_ARM_ID, 0.0, 30.0);
 }
 
 void control()
@@ -263,7 +259,7 @@ void control()
   {
     char data = (char)mySerial.read();
     Serial.println(data);
-    //char data = (char)Serial.read();
+    // char data = (char)Serial.read();
     switch (data)
     {
     case 'T': // test motion
@@ -355,7 +351,7 @@ void setup()
 {
   // Begin serial communication with Arduino and Arduino IDE (Serial Monitor)
   Serial.begin(9600);
-  // Begin serial communication with Arduino and HC-05
+  // Begin serial communication with Arduino and ESP32
   mySerial.begin(9600);
 
   // Set Port baudrate to 57600bps. This has to match with DYNAMIXEL baudrate.

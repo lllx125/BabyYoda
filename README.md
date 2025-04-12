@@ -1,132 +1,128 @@
-# BabyYoda
+# Baby Yoda
 
-the Code for Baby Yoda using Dynamixel in Fall 2024 by Lixing Li. This Instruction aims to help you learn to control Baby Yoda, built your own Baby Yoda, understand and expand on the current version. Good Luck!
+![Baby Yoda Prototype](./images/baby_yoda.jpg)
 
-### Control Version: Xbox to Laptop to HC-05 to Arduino to Dynamixel - 12/07/2024
+These instructions will help you learn to control Baby Yoda, build your own Baby Yoda, and understand the current version with potential for expansion. Good luck!
 
-## Control Intructions
+**Control Version 1.1.0: Xbox to ESP32 to Arduino to Dynamixel - 03/15/2025**
+
+Previous control version: Xbox to Laptop to HC-05 to Arduino to Dynamixel - 12/07/2024
+
+This guide covers installation and motion testing: [Baby Yoda Install and Test](https://youtu.be/v0qp3fYCByA)
+
+# User Instructions
 
 ### Control
 
-This is designed to control Baby Yoda face-to-face. Therefore, when you push the left joy stick, it moves its arm on your left (its right arm).
+Baby Yoda is controlled face-to-face, meaning when you push the left joystick, it moves the arm that's on your left (its right arm).
 
--   Left Joy Stick: Left Arm
--   Right Joy Stick: Right Arm
--   Dpad: Head
--   X: Shows a series of predefined motions
--   Y: Go to initial position
+-   **Left Joystick**: Left Arm
+-   **Right Joystick**: Right Arm
+-   **D-pad**: Head
+-   **X**: Shows a series of predefined motions
+-   **Y**: Go to initial position
+-   **B**: Wave left hand 3 times
 
 ### Power
 
-There are two seperate power systems: Arduino (9V) and Dynamixel Shield (12V). They are powered differently. When you turn Baby Yoda on, make sure they are both powered.
+Baby Yoda has two separate power systems that must both be on to function: Arduino (9V) and Dynamixel Shield (12V).
 
-The switch controls the power for the Dynamixel Shield. The Right most charger charges the internal battery for the Dynamixel Shield.
+The switch controls the Dynamixel Shield's power. The rightmost charger connects to the Dynamixel Shield's internal battery.
 
-The Arduino is powered by either plugingin the charger from a 9V battery or 9V power source. Or you can plugin the USB-B port and power it by your computer.
+The Arduino can be powered either through a 9V battery/power source or by connecting it to your computer via the USB-B port.
 
-### Connections
+### Pairing
 
-Turn on Bluetooth and pair your computer with HC-05. The passcode is `1234`.
+Press and hold the connection button on top of the Xbox controller until the flashing light becomes steady.
 
-Press and hold the pairing button on the Xbox One Controller and pair it with your laptop. The pairing button is the one on the top of the Xbox Controller, next to the USB-C port.
+# For Developers
 
-#### Pull this repository from Github and run `SendMessage.py` you might need to install some [dependencies](#dependecies).
+## Dynamixel
 
-### Port Setups (Optional)
-
-Change `port` in `SendMessage.py` to the port name of the HC-05. In windows, it is usually `COM4` or `COM5`/ In mac, it is usually `/dev/cu.HC-05`
-
-## For Developers
-
-## Setup
-
-### Wiring
-
--   Connect the Dynamixels in series and plugin the wire onto the dynamixel shield (any pin is ok Dynamixel shield is able to recognize their motors by the ID).
-
--   The Dynamixel shield is placed directly on top of the Aruidno Uno board.
-
--   The Bluetooth Module HC-05 is connected to the Arduino (via the pins on the Dynamixel Shield) in the following ways: GND to GND, 5V to 5V, TX to 3, RX to 4.
-
--   The shield is independently powered by a 12 V battery and it has its own switch to control the power.
-
-### Dynamixel Details
-
--   Each Dynamixel motor's ID is changed to the following
-    (Left/Right mean looking from the front, face to face with baby Yoda.)
-
+-   Each Dynamixel motor's ID is configured as follows (Left/Right are from a face-to-face perspective with Baby Yoda):
     -   Head motor (up-down): 101
     -   Neck motor (left-right): 102
     -   Left Arm motor (outward-inward): 103
     -   Left Shoulder motor (forward-backward): 104
     -   Right Shoulder motor (forward-backward): 105
     -   Right Arm motor (outward-inward): 106
+-   To upload the code, set the Dynamixel shield switch to `upload` mode. For motor operation, switch it to `Dynamixel` mode.
+-   If a motor becomes stuck, its LED will flash and it may lose torque. A power restart may be necessary.
 
--   To upload the code, make sure that the switch on the Dynamixel shield is turned to `upload` mode. When you want the motor to run, make sure the switch is turned to `Dynamixel` mode.
+## Circuit
 
--   If the motor is stuck, the LED will flash and the motor might lose its torque.
+![Baby Yoda’s Circuit Diagram](./images/circuit_image.png)
 
-### Code Dependecies
+Baby Yoda’s circuit diagram, created using [Cirkit Designer IDE](https://app.cirkitdesigner.com/project/733f7253-d2ce-4fde-950d-96555f7f8535).
 
-The Arduino code is dependent on `DynamixelShield`. Download this library from Arduino's library manager.
+![Actual Circuit Connection](./images/actual_circuit_connection.jpeg)
 
-The python code is dependent on `inputs` and `pyserial`. Run
+A photo of the actual circuit connection.
 
-```bash
-pip install inputs
-pip install pyserial
-```
+### Arduino-ESP32 Communication
 
-in the terminal to install the packages.
+### power source
 
-## Code Explanation
+The 12V battery connects directly to the Dynamixel shield's power input, with a switch installed on the positive terminal.
 
-### Arduino Code (`BabyYodaDynamixelCode.ino`)
+### Dynamixel Motors
 
-#### Main Functionalities:
+The connection pattern of the Dynamixel motors doesn't matter, as long as they're all connected to the Dynamixel shield.
 
--   Degree mechanisms:
-    -   The code does not read the degree from the motor directly, rather, it converts the degree into my own coordinate. The new degree coordinate is the motor degree with a shift (no scaling), where the "initial degree" is shifted to 0 degree in my coordinate.
-    -   The degree shift can be tune by changing the inital position of the motor in the `initPosition()` function. The `initID()` turns the motor into its actual degree and set that degree to our new 0.
-    -   `initID()` makes sure that the motor returns to intial position from the proper direction is a smooth manner.
-    -   If the joints and motors changed, the inital degrees needs to be tuned again. **If Right Arm motor and Left Arm motor ever fell off the gear, the inital position will need to be changed!** If the motor got stuck, it will not work.
-    -   Press the reset button on the Arduino to make it go to intial position.
-    -   The degrees are updated by code (the program knows how the motors are turned). It is stored in `Degree`.
-    -   The each motor has its degree bounded by some limit to avoid motors being stucked. It is stored in `DegreeLimit` and checked by `assertDegree()`.
-    -   The Gear ratio is accounted by the rotational speed, but the degree still represents the degree of the motor.
--   `rotateTo()`: rotate the motor to a certain degree with a certain speed.
--   `testMotions()`: make Bady Yoda follow a fixed path of motions.
--   Instructions to control motors:
-    -   `control()`: recieves instructions from the serial port and convert it to motor movements.
-    -   `start()`: make a certain motor move at a certain speed. The function checks whether this movement direction is allowed (Not allowed if any movement forward will exceed the degree limit). It computes the maximum run time of the motor and sets a future stop time. If the stop signal is not sent, the motor automatically stops when it reaches the limit.
-    -   `stop()`: called when a stop instruction is sent or `checkStopTime()` stops the motor. This function stops the motor.
+In this case, I connected them in pairs: the head motor and neck motor as one pair, the left arm and left shoulder as another pair, and the right arm and right shoulder as the third pair.
 
-### `ReadFromXbox.py`
+Each pair is connected in series and plugged into one of the three ports on the Dynamixel shield.
 
--   Reads Gamepad status from the Xbox controller and organize it, normalizing the joystick position. The useful informations are returned by `read()`.
+## Code
 
--   When the file is runed, it outputs the results of `read()`.
+### Arduino Code ([`BabyYodaDynamixalCode.ino`](https://github.com/lllx125/BabyYoda/blob/main/BabyYodaDynamixalCode/BabyYodaDynamixalCode.ino))
 
--   `PosToState()` turns the position of the gamepad joystick into discrete states.
+-   **Degree Coordinate Transformation**:
+    -   The code doesn't read degrees directly from the motor. Instead, it converts degrees into a custom coordinate system. This new system applies a shift (without scaling) to the motor degree, where the "initial degree" becomes 0 in our coordinate system.
+    -   The degree shift can be adjusted by changing the initial position of the motor in the `initPosition()` function. The `initID()` function rotates the motor to its actual degree and sets that as our new 0.
+    -   `initID()` ensures the motor returns to its initial position smoothly from the correct direction.
+    -   When joints or motors are changed, the initial degrees must be recalibrated. **If Right Arm motor and Left Arm motor ever fell off the gear, the initial position will need to be changed!** Note that a stuck motor will not function.
+    -   Press the Arduino's reset button to return to the initial position.
+    -   The program tracks motor rotations and stores the degrees in `Degree`.
+    -   Each motor has degree limits to prevent jamming. These limits are stored in `DegreeLimit` and verified by `assertDegree()`.
+    -   While the gear ratio affects rotational speed, degree measurements still refer to the motor's angle.
+-   **Control Mechanism**:
+    -   The controller sends only two signals: a start signal when a button is pressed and a stop signal when it's released.
+    -   When receiving a stop signal, the motor stops immediately.
+    -   When receiving a start signal, the motor begins rotating at a predefined speed.
+    -   To prevent damage, the motor must not move indefinitely without a stop signal. We must ensure that the motor's degree of rotation stays within defined limits.
+    -   To accomplish this, we manually send a stop signal after a calculated interval following the start signal. This interval is calculated using the current degree and angular velocity.
+    -   Here is the complete control process: start signal → set motor velocity → send a delayed stop signal timed to reach the limit → stop when receiving a signal (either from the controller or from reaching the limit).
+-   **Specific Functions Explanations**:
+    -   `rotateTo()`: rotates the motor to a specific degree at a set speed.
+    -   `testMotions()`: makes Baby Yoda perform a predetermined sequence of movements.
+    -   `control()`: receives instructions from the serial port and converts them to motor movements.
+    -   `start()`: initiates motor movement at a specified speed. It checks if the movement is within allowed limits, calculates maximum run time, and sets a stop time. The motor automatically stops at the limit if no stop signal is received.
+    -   `stop()`: halts the motor when called by a stop instruction or `checkStopTime()`.
 
-### `ProcessData.py`
+### ESP32 Code ([`ESP32Code.ino`](https://github.com/lllx125/BabyYoda/blob/main/ESP32Code/ESP32Code.ino))
 
--   Record the change in states. When the a certain state changes, sends according instructions via `sendCode()`.
+-   Reads gamepad status from the Xbox controller, organizes it, normalizes the joystick position, and stores it in the structure `RobotControllerState`.
+-   `PosToState()` converts the gamepad joystick position into discrete states.
+-   `buildCode()` monitors state changes. When a state changes, it writes instructions to send to the Arduino.
+-   Uses serial communication to send the code to Arduino via Baud rate 9600. See more details in the [Arduino-EXP32 Communication](https://www.notion.so/Baby-Yoda-1-1-0-1b75e61c54338094b3f0ef9f4c8e3898?pvs=21) section.
 
-### `SendMessage.py`
-
--   Connects to Serial and sents the data to the serial port.
--   Change `port` to the one for HC-05 when needed.
-
-## Materials
+## **Materials**
 
 -   Baby Yoda Model
 -   Arduino Uno
+-   ESP32
 -   Dynamixel Shield
 -   6 Dynamixel XC330 Motors
--   HC-05 Bluetooth Module
 -   12V Rechargable Battery
 -   Wires
+-   1k resistors
 -   Switch
 -   Cable (for powering Arduino or sending code to Arduino) or 9V battery (for powering Arduino)
 -   Xbox One Controller
+
+# Debug Checklist
+
+-   If a motor becomes loose, turn off the 12V power supply and turn it back on.
+-   If pairing fails, try disconnecting and reconnecting the 9V battery. If the issue persists, the battery may need replacement.
+-   If motors are misaligned, press Y to return to initial position or press the red reset button on the Arduino.

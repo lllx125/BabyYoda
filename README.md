@@ -61,6 +61,12 @@ A photo of the actual circuit connection.
 
 ### Arduino-ESP32 Communication
 
+The ESP32 communicates with Arduino through TX-RX outputs, with ESP's TX port connected to Arduino's port 3 and RX port connected to Arduino's port 2. The baud rate is 9600, allowing direct serial port communication.
+
+Since ESP32 operates at 3.3V while Arduino operates at 5V, we need a voltage divider using three resistors to adjust the voltage. The circuit ensures correct voltage output—without this adjustment, the readings would be corrupted.
+
+The ESP32 receives power from the Arduino, with its 3.3V pin connected to Arduino's 3.3V port and its ground connected to Arduino's ground. You can verify that ESP32 is receiving power by checking if its red LED is illuminated.
+
 ### power source
 
 The 12V battery connects directly to the Dynamixel shield's power input, with a switch installed on the positive terminal.

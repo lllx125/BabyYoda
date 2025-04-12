@@ -111,7 +111,7 @@ Each pair is connected in series and plugged into one of the three ports on the 
 -   Reads gamepad status from the Xbox controller, organizes it, normalizes the joystick position, and stores it in the structure `RobotControllerState`.
 -   `PosToState()` converts the gamepad joystick position into discrete states.
 -   `buildCode()` monitors state changes. When a state changes, it writes instructions to send to the Arduino.
--   Uses serial communication to send the code to Arduino via Baud rate 9600. See more details in the [Arduino-EXP32 Communication](https://www.notion.so/Baby-Yoda-1-1-0-1b75e61c54338094b3f0ef9f4c8e3898?pvs=21) section.
+-   Uses serial communication to send the code to Arduino via a baud rate of 9600. See more details in the [Arduino-ESP32 Communication](#arduino-esp32-communication) section.
 
 ## **Materials**
 

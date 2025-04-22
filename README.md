@@ -81,6 +81,13 @@ Each pair is connected in series and plugged into one of the three ports on the 
 
 ## Code
 
+### Packages
+
+The code depends two external packages
+
+- `Bluepad32.h`, which you can install following this instruction: https://github.com/ricardoquesada/bluepad32?tab=readme-ov-file
+- `DynamixelShield.h` , which you can install by searching in the Arduino IDE library manager. The one that is “DynamixelShield by ROBOTIS” is the correct package.
+  
 ### Arduino Code ([`BabyYodaDynamixalCode.ino`](https://github.com/lllx125/BabyYoda/blob/main/BabyYodaDynamixalCode/BabyYodaDynamixalCode.ino))
 
 -   **Degree Coordinate Transformation**:
